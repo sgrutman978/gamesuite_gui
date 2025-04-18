@@ -23,6 +23,9 @@ import {
 import { Switch } from "../components/ui/switch";
 import { Card, CardContent } from "../components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { newLeaderboardTx } from "../lib/SuiConnection";
+import GameSuiteClient from "gamesuite_connect";
+import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 
 const formSchema = z.object({
   name: z.string().min(5, {
@@ -34,8 +37,8 @@ const formSchema = z.object({
   // project: z.string({
   //   required_error: "Please select a project.",
   // }),
-  type: z.string({
-    required_error: "Please select a type.",
+  unit: z.string().min(1, {
+    message: "Please provide a unit.",
   }),
   sortOrder: z.string({
     required_error: "Please select a sort order.",
@@ -44,22 +47,34 @@ const formSchema = z.object({
   isPublic: z.boolean().default(true),
 });
 
-export function NewLeaderboardForm() {
+export function NewLeaderboardForm(props: any) {
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const gsc = new GameSuiteClient(useCurrentAccount(), signAndExecuteTransaction);
   const navigate = useNavigate();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       description: "",
+      unit: "",
       isPublic: true,
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    alert("Leaderboard created");
-    navigate("/admin/leaderboards");
-    console.log(values);
-  }
+    const onSubmit = (values: z.infer<typeof formSchema>) => {
+      console.log("ppppp");
+      let orderBool = values.sortOrder == "Highest to Lowest" ? true : false;
+      // TODO get projects by projectCap objects owned by current user, pass projectId and capObj addy into this form component
+      newLeaderboardTx(props.projectCap, values.name, values.unit, values.description, orderBool, props.projectId, 529404957, [0,1,2,3,4,5,6,7], gsc.myAddy).then((tx) => {
+        gsc.doTransaction(tx!, ()=>{
+          alert("Leaderboard created");
+          navigate("/admin/leaderboards");
+          console.log(values);
+        });
+      }).catch((e) => {
+        console.log(e);
+      });
+    }
 
   return (
     <Card>
@@ -120,19 +135,19 @@ export function NewLeaderboardForm() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-3 items-start">
-              <FormField
+              {/* <FormField
                 control={form.control}
-                name="type"
+                name="unit"
                 render={({ field }) => (
                   <FormItem className="w-full">
-                    <FormLabel className="!text-black">Type</FormLabel>
+                    <FormLabel className="!text-black">Unit</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select type" />
+                          <SelectValue placeholder="Enter a Unit" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -144,7 +159,22 @@ export function NewLeaderboardForm() {
                     <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
-              />
+              /> */}
+
+            <FormField
+              control={form.control}
+              name="unit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="!text-black">Unit</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter unit (points, seconds, etc.)" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-red-500" />
+                </FormItem>
+              )}
+            />
+
               <FormField
                 control={form.control}
                 name="sortOrder"

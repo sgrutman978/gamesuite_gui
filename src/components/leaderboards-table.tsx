@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -31,6 +31,9 @@ import {
   TableRow,
 } from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
+import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import GameSuiteClient from "gamesuite_connect";
+import { getLeaderboardsDetails, getProjectDetails } from "../lib/SuiConnection";
 
 type Leaderboard = {
   id: string;
@@ -41,21 +44,58 @@ type Leaderboard = {
   lastUpdated: string;
 };
 
-const data: Leaderboard[] = [
-  {
-    id: "1",
-    name: "Weekly High Scores",
-    project: "Racing Challenge",
-    type: "score",
-    entries: 156,
-    lastUpdated: "2 hours ago",
-  },
-];
-
-export function LeaderboardsTable() {
+export function LeaderboardsTable(props: any) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
+  const [data, setData] = useState<Leaderboard[]>([]);
+
+    const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+    const gsl = new GameSuiteClient(useCurrentAccount(), signAndExecuteTransaction);
+
+  // const data: Leaderboard[] = [
+  //   {
+  //     id: "1",
+  //     name: "Weekly High Scores",
+  //     project: "Racing Challenge",
+  //     type: "score",
+  //     entries: 156,
+  //     lastUpdated: "2 hours ago",
+  //   },
+  // ];
+
+
+  useEffect(() => {
+    setData([]);
+    if(gsl.myAddy){
+      console.log("gggg");
+      getProjectDetails(props.projectId).then((projectData) => {
+        console.log("popopop");
+        console.log(projectData.nodes);
+        let leaderboardIds: string[] = [];
+        projectData.nodes.forEach((projWrapper: any) => {
+          leaderboardIds = projWrapper.asMoveObject!.contents.json.leaderboards;
+        });
+        getLeaderboardsDetails(leaderboardIds).then((leaderboardsData) => {
+          console.log("iiiiii");
+          console.log(leaderboardsData.nodes);
+          leaderboardsData.nodes.forEach((lbData: any) => {
+            const lb = lbData.asMoveObject!.contents.json;
+            const newOne: Leaderboard = {
+              id: "",
+              name: lb.id,
+              project: "",
+              type: "score",
+              entries: 0,
+              lastUpdated: ""
+            };
+            setData(prev => [...prev, newOne]);
+          });
+        });
+    });
+  }
+  }, [gsl.myAddy])
+
 
   const columns: ColumnDef<Leaderboard>[] = [
     {

@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
+import { ConnectModal } from "@mysten/dapp-kit";
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -53,18 +54,18 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           </div>
           <ArrowRight className="h-5 w-5" />
         </Button>
-
-        <Button
+        <ConnectModal
+			trigger={
+				<Button
           variant="outline"
-          className="w-full mt-4 justify-between cursor-pointer text-left h-[44px] font-normal"
-          // onClick={handleWalletConnect}
-        >
+          className="w-full mt-4 justify-between cursor-pointer text-left h-[44px] font-normal">
           <div className="flex items-center gap-2">
-            <Wallet2 className="h-5 w-5" />
             <span>Connect Wallet</span>
           </div>
           <ArrowRight className="h-5 w-5" />
         </Button>
+			}
+		/>
       </CardContent>
     </Card>
   );

@@ -23,6 +23,8 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/tabs";
+import { ConnectButton, ConnectModal, useCurrentAccount, WalletProvider } from "@mysten/dapp-kit";
+
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -32,6 +34,12 @@ export default function Navbar() {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  const currentAccount = useCurrentAccount();
+
+// const availableWallets = getWallets().get();
+// console.log(availableWallets);
+// availableWallets[0].features['standard:connect'].connect(); // connect call
 
   const navItems = [
     { name: "Home", path: "/", icon: <Gamepad2 className="h-4 w-4 mr-1" /> },
@@ -119,8 +127,8 @@ export default function Navbar() {
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px] max-h-[95dvh] overflow-y-auto pt-10 border-purple-300 bg-gradient-to-b from-indigo-50 to-white">
-                <Tabs defaultValue="login" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 bg-purple-100">
+                {/* <Tabs defaultValue="login" className="w-full"> */}
+                  {/* <TabsList className="grid w-full grid-cols-2 bg-purple-100">
                     <TabsTrigger
                       value="login"
                       className="cursor-pointer data-[state=active]:bg-white data-[state=active]:text-purple-700"
@@ -133,14 +141,14 @@ export default function Navbar() {
                     >
                       Sign Up
                     </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="login">
+                  </TabsList> */}
+                  {/* <TabsContent value="login"> */}
                     <LoginForm onSuccess={() => setDialogOpen(false)} />
-                  </TabsContent>
-                  <TabsContent value="signup">
+                  {/* </TabsContent> */}
+                  {/* <TabsContent value="signup">
                     <SignupForm onSuccess={() => setDialogOpen(false)} />
-                  </TabsContent>
-                </Tabs>
+                  </TabsContent> */}
+                {/* </Tabs> */}
               </DialogContent>
             </Dialog>
             <Button
@@ -254,6 +262,9 @@ export default function Navbar() {
           </div>
         </div>
       )}
+         {/* <WalletProvider autoConnect> */}
+            {/* <ConnectButton style={{width: "100%", textAlign: "left", height: "100%", fontSize: "14px"}} ></ConnectButton> */}
+            {/* </WalletProvider> */}
     </nav>
   );
 }

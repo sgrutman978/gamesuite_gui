@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { NewLeaderboardForm } from "../components/new-leaderboard-form";
 
 export default function NewLeaderboardPage() {
+  const { projectId, projectCap } = useParams();
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -17,7 +18,7 @@ export default function NewLeaderboardPage() {
         </h1>
       </div>
 
-      <NewLeaderboardForm />
+      <NewLeaderboardForm projectId={projectId} projectCap={projectCap} />
     </div>
   );
 }

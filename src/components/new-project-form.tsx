@@ -60,7 +60,8 @@ export function NewProjectForm() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if(gsl.myAddy){
-      newProjectTx(form.getValues().name, form.getValues().hasLeaderboards, form.getValues().hasAchievements).then((tx) => {
+      console.log(gsl.myAddy);
+      newProjectTx(form.getValues().name, form.getValues().hasLeaderboards, form.getValues().hasAchievements, gsl.myAddy).then((tx) => {
         gsl.doTransaction(tx!, () => {
           alert("New Project Created");
           navigate("/admin/projects");

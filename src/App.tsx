@@ -8,12 +8,13 @@ import LeaderboardsPage from "./pages/leaderboard";
 import NewLeaderboardPage from "./pages/new-leadersboard";
 import NewProjectPage from "./pages/new-project-page";
 
-import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
+import { ConnectButton, SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EnokiFlowProvider } from '@mysten/enoki/react';
 import { getFullnodeUrl, SuiClient, SuiClientOptions } from "@mysten/sui/client";
 import { useState } from "react";
 import { NewProjectForm } from "./components/new-project-form";
+import '@mysten/dapp-kit/dist/index.css';
 
 const myNetwork = "mainnet";
 const networks = {
@@ -39,6 +40,7 @@ function App() {
 		>
     <QueryClientProvider client={queryClient}>
     <WalletProvider autoConnect>
+      {/* <ConnectButton></ConnectButton> */}
 		{/* <EnokiFlowProvider apiKey="enoki_public_10094b0bafc9ba2626fcbc02a1812d6b"> */}
     <div className="App">
       <BrowserRouter>
@@ -64,7 +66,7 @@ function App() {
             }
           />
           <Route
-            path="/admin/leaderboards"
+            path="/admin/leaderboards/:projectId/:projectCap"
             element={
               <>
                 {/* <Navbar /> */}
@@ -76,7 +78,7 @@ function App() {
             }
           />
           <Route
-            path="/admin/leaderboards/new"
+            path="/admin/leaderboards/:projectId/:projectCap/new"
             element={
               <>
                 {/* <Navbar /> */}

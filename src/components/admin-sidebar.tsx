@@ -4,6 +4,10 @@ import { Button } from "../components/ui/button";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { cn } from "../lib/utils";
 import Sidebar, { CollapsibleSection } from "./sidebar";
+import { getMyProjects } from "../lib/SuiConnection";
+import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import GameSuiteClient from "gamesuite_connect";
+import { useEffect, useState } from "react";
 
 export function AdminSidebar({
   className,
@@ -13,25 +17,41 @@ export function AdminSidebar({
   hidden?: boolean;
 }) {
   const { pathname } = useLocation();
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
-  const sidebarItems = [
-    {
-      title: "Axol",
-      icon: "game",
-      subItems: [
-        {
-          title: "Leaderboards",
-          path: "/admin/leaderboards",
-          icon: "list"
-        },
-        {
-          title: "Achievements",
-          path: "/admin/achievements",
-          icon: "trophy"
-        },
-      ]
-    },
-  ];
+  const gsl = new GameSuiteClient(useCurrentAccount(), signAndExecuteTransaction);
+  const [sidebarItems, setSidebarItems] = useState<{}[]>([]);
+
+  useEffect(() => {
+    setSidebarItems([]);
+    if(gsl.myAddy){
+      console.log("gggg");
+      getMyProjects("leaderboard::ProjectCap", gsl.myAddy).then((data) => {
+        data.nodes.forEach((projWrapper: any) => {
+          const proj = projWrapper.asMoveObject!.contents.json;
+          console.log("iiiiii");
+          console.log(proj);
+          const newOne = {
+            title: proj.name,
+            icon: "game",
+            subItems: [
+              {
+                title: "Leaderboards",
+                path: `/admin/leaderboards/${proj.projectId}/${proj.id}`,
+                icon: "list"
+              },
+              {
+                title: "Achievements",
+                path: `/admin/achievements/${proj.id}`,
+                icon: "trophy"
+              },
+            ]
+          };
+          setSidebarItems(prev => [...prev, newOne]);
+        })
+    });
+  }
+  }, [gsl.myAddy])
 
   // const items = [
   //   {

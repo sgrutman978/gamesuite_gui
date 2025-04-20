@@ -38,10 +38,13 @@ import { getLeaderboardsDetails, getProjectDetails } from "../lib/SuiConnection"
 type Leaderboard = {
   id: string;
   name: string;
-  project: string;
-  type: "score" | "time" | "points";
+  // project: string;
+  private: boolean;
+  unit: string;
   entries: number;
-  lastUpdated: string;
+  sortDesc: boolean;
+  // lastUpdated: string;
+  public_key_server: string;
 };
 
 export function LeaderboardsTable(props: any) {
@@ -82,12 +85,15 @@ export function LeaderboardsTable(props: any) {
           leaderboardsData.nodes.forEach((lbData: any) => {
             const lb = lbData.asMoveObject!.contents.json;
             const newOne: Leaderboard = {
-              id: "",
-              name: lb.id,
-              project: "",
-              type: "score",
-              entries: 0,
-              lastUpdated: ""
+              id: lb.id,
+              name: lb.metadata.name,
+              // project: "",
+              unit: lb.metadata.unit,
+              entries: parseInt(lb.scores.size),
+              // lastUpdated: "",
+              public_key_server: `"${lb.project_server_keypair_public_key}"`, //TODO format properly
+              private: lb.metadata.private,
+              sortDesc: lb.metadata.sortDesc
             };
             setData(prev => [...prev, newOne]);
           });
@@ -138,36 +144,37 @@ export function LeaderboardsTable(props: any) {
       ),
     },
     {
-      accessorKey: "project",
+      accessorKey: "unit",
       header: ({ column }) => {
         return (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Project
+            Units
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("project")}</div>,
+      cell: ({ row }) => <div>{row.getValue("unit")}</div>,
     },
     {
-      accessorKey: "type",
-      header: "Type",
+      accessorKey: "private",
+      header: "Display",
       cell: ({ row }) => {
-        const type = row.getValue("type") as string;
+        const type = row.getValue("private") as boolean;
         return (
           <Badge
             variant={
-              type === "score"
-                ? "default"
-                : type === "time"
-                ? "secondary"
-                : "outline"
+              type ? "default" : "secondary"
+              // type === "score"
+              //   ? "default"
+              //   : type === "time"
+              //   ? "secondary"
+              //   : "outline"
             }
           >
-            {type}
+            {type ? "private" : " public"}
           </Badge>
         );
       },
@@ -189,10 +196,26 @@ export function LeaderboardsTable(props: any) {
         <div className="text-center">{row.getValue("entries")}</div>
       ),
     },
+    // {
+    //   accessorKey: "lastUpdated",
+    //   header: "Last Updated",
+    //   cell: ({ row }) => <div>{row.getValue("lastUpdated")}</div>,
+    // },
     {
-      accessorKey: "lastUpdated",
-      header: "Last Updated",
-      cell: ({ row }) => <div>{row.getValue("lastUpdated")}</div>,
+      accessorKey: "sortDesc",
+      header: "Sort",
+      cell: ({ row }) => {
+        const type = row.getValue("sortDesc") as boolean;
+        return (
+          <Badge
+            variant={
+              type ? "default" : "secondary"
+            }
+          >
+            {type ? "descending" : " ascending"}
+          </Badge>
+        );
+      },
     },
     {
       id: "actions",
@@ -209,10 +232,11 @@ export function LeaderboardsTable(props: any) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(leaderboard.id)}
-              >
-                Copy leaderboard ID
+              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(leaderboard.id)}>
+                Copy ID
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(leaderboard.public_key_server)}>
+                Copy Public Key
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>View leaderboard</DropdownMenuItem>

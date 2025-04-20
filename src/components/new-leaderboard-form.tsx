@@ -23,9 +23,11 @@ import {
 import { Switch } from "../components/ui/switch";
 import { Card, CardContent } from "../components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { newLeaderboardTx } from "../lib/SuiConnection";
+import { newLeaderboardTx, submitScore } from "../lib/SuiConnection";
 import GameSuiteClient from "gamesuite_connect";
 import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import { ed25519 } from '@noble/curves/ed25519';
+import { useEffect } from "react";
 
 const formSchema = z.object({
   name: z.string().min(5, {
@@ -47,6 +49,29 @@ const formSchema = z.object({
   isPublic: z.boolean().default(true),
 });
 
+function getRandomHex(length: number): Uint8Array {
+  const array = new Uint8Array(length);
+  
+  for (let i = 0; i < length; i++) {
+    array[i] = Math.floor(Math.random() * 256); // 0 to 255 for each byte
+  }
+  
+  return array;
+}
+
+async function generateEd25519KeyPair(): Promise<{ publicKey: Uint8Array; privateKey: string }> {
+  const privateKey = getRandomHex(32); // Generate a 32-byte random private key
+  const publicKey = await ed25519.getPublicKey(privateKey); // Derive the public key from the private key
+  console.log(privateKey);
+  console.log("PRIVATE");
+  console.log(publicKey);
+  return { publicKey: publicKey, privateKey: Buffer.from(privateKey).toString('hex') };
+}
+
+// generateEd25519KeyPair().then(data => {
+//   console.log(data);
+// })
+
 export function NewLeaderboardForm(props: any) {
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const gsc = new GameSuiteClient(useCurrentAccount(), signAndExecuteTransaction);
@@ -61,19 +86,48 @@ export function NewLeaderboardForm(props: any) {
     },
   });
 
+  useEffect(() => {
+    submitScore().then((tx3) => {
+      gsc.doTransaction(tx3!, ()=>{
+        alert(`Leaderboard created`);
+        // console.log(`COPY THIS PRIVATE KEY (THIS WILL NOT BE ACCESSIBLE AGAIN)\n ${data.privateKey} `);
+        // navigate("/admin/leaderboards");
+        // console.log(values);
+      });
+    })
+  }, []);
+
+
+
+
     const onSubmit = (values: z.infer<typeof formSchema>) => {
       console.log("ppppp");
-      let orderBool = values.sortOrder == "Highest to Lowest" ? true : false;
-      // TODO get projects by projectCap objects owned by current user, pass projectId and capObj addy into this form component
-      newLeaderboardTx(props.projectCap, values.name, values.unit, values.description, orderBool, props.projectId, 529404957, [0,1,2,3,4,5,6,7], gsc.myAddy).then((tx) => {
+      console.log(values.isPublic);
+      let orderBool = values.sortOrder == "desc" ? true : false;
+
+      generateEd25519KeyPair().then((data) => {
+        // let encPriv = nodeRSA.encrypt({
+        //     text: Buffer.from(data.privateKey).toString('hex')
+        // });
+        // res.json({
+        //     wink: data.privateKey,
+        //     p: data.publicKey
+        // });
+    
+
+      // add private field (!values.isPublic) to newLeaderboardTx and tx.movecall etc, already added to contract just not published
+      newLeaderboardTx(props.projectCap, values.name, values.unit, values.description, orderBool, props.projectId, 529404995, Array.from(data.publicKey), gsc.myAddy, (!values.isPublic)).then((tx) => {
         gsc.doTransaction(tx!, ()=>{
-          alert("Leaderboard created");
-          navigate("/admin/leaderboards");
+          alert(`Leaderboard created`);
+          console.log(data);
+          console.log(`COPY THIS PRIVATE KEY (THIS WILL NOT BE ACCESSIBLE AGAIN)\n ${data.privateKey} `);
+          // navigate("/admin/leaderboards");
           console.log(values);
         });
       }).catch((e) => {
         console.log(e);
       });
+    });
     }
 
   return (

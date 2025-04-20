@@ -69,7 +69,7 @@ export function AdminSidebar({
       }`}
     >
       <div className="flex h-full max-h-screen flex-col gap-2">
-        <div className="flex h-[60px] items-center border-b px-4">
+        <div className="flex h-[60px] items-center border-b px-4" style={{zIndex: 600}}>
          <Link
               to="/"
               className="flex-shrink-0 gap-2 flex items-center group"
@@ -86,7 +86,7 @@ export function AdminSidebar({
               />
             </Link>
         </div>
-        <Sidebar sidebarItems={sidebarItems} />
+        <Sidebar sidebarItems={sidebarItems} admin={true} />
         {/* <ScrollArea className="flex-1 py-2">
           <nav className="grid gap-1 px-2">
             {items.map((item) => (

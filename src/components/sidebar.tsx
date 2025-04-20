@@ -30,7 +30,7 @@ const Sidebar = (props: any) => {
         </div>
       )}
       <div
-        className={`w-64 h-[100dvh] fixed left-0 lg:pt-5 pt-14 top-[65px] z-[500] bg-white border-r border-gray-200 p-4 overflow-y-auto ${
+        className={`w-64 ${props.admin ? "h-auto absolute" : "h-[100dvh] fixed"} left-0 lg:pt-5 pt-14 top-[65px] z-[500] bg-white border-r border-gray-200 p-4 overflow-y-auto ${
           open
             ? "lg:translate-x-0 translate-x-[0px]"
             : "lg:translate-x-0 translate-x-[-500px]"

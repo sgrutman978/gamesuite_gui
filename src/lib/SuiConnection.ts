@@ -2,8 +2,10 @@ import { getFullnodeUrl, PaginatedObjectsResponse, QueryEventsParams, SuiClient,
 import { coinWithBalance, Transaction } from '@mysten/sui/transactions';
 import { graphql } from '@mysten/sui/graphql/schemas/latest';
 import { SuiGraphQLClient } from '@mysten/sui/graphql';
+import { ed25519 } from '@noble/curves/ed25519';
 
-const programAddress = "0x45a40a4f75cf436e51026c09fe4aaaa0afbacd67ad7b249ca35d6121c06df24c";
+const OGprogramAddress = "0x0abddd10ef6d65db73e4ea7ba61fc1107d811c19a88d0304ac1d173c980b7434";
+const programAddress = "0x0abddd10ef6d65db73e4ea7ba61fc1107d811c19a88d0304ac1d173c980b7434";
 
 const gqlClient = new SuiGraphQLClient({
 	url: 'https://sui-mainnet.mystenlabs.com/graphql',
@@ -44,7 +46,7 @@ const getOwnedObjectsByTypeQuery = (type: string, owner: string) => graphql(`
 
   export async function getMyProjects(type: string, owner: string): Promise<Record<string, any>> {
 	console.log("uuuuu");
-	const myQuery = getOwnedObjectsByTypeQuery(`"${programAddress}::${type}"`, `"${owner}"`);
+	const myQuery = getOwnedObjectsByTypeQuery(`"${OGprogramAddress}::${type}"`, `"${owner}"`);
 	console.log(myQuery);
 	return await queryHelper(myQuery);
   }
@@ -89,7 +91,7 @@ export async function newProjectTx(name: string, hasLeaderboards: boolean, hasAc
 	return undefined;
 }
 
-export async function newLeaderboardTx(projectCapAddy: string, name: string, unit: string, description: string, sortDesc: boolean, projectId: string, projectObjVersion: number, publicKey: number[], myAddy: string): Promise<Transaction | undefined>{
+export async function newLeaderboardTx(projectCapAddy: string, name: string, unit: string, description: string, sortDesc: boolean, projectId: string, projectObjVersion: number, publicKey: number[], myAddy: string, priv: boolean): Promise<Transaction | undefined>{
 	// if(?){
 	console.log(projectCapAddy);
 	console.log(projectId);
@@ -102,7 +104,7 @@ export async function newLeaderboardTx(projectCapAddy: string, name: string, uni
         });
 		tx.setSender(myAddy);
 		tx.moveCall({ target: programAddress+"::leaderboard::create_leaderboard", arguments: [
-            tx.object("0x3fc47a66f7c1fba58e48b0918ac4a32913d93d2dfef885e10ae48f62e5959c51"),
+            tx.object(projectCapAddy),
             tx.pure.string(name),
             tx.pure.string(unit),
 			tx.pure.bool(sortDesc),
@@ -114,7 +116,62 @@ export async function newLeaderboardTx(projectCapAddy: string, name: string, uni
               }),
 			//   tx.pure.string(description),
             tx.makeMoveVec({type: "u8", elements: elements}),
-			coinWithBalance({balance: 20000000})
+			coinWithBalance({balance: 20000000}),
+			tx.pure.bool(priv)
+		]});
+		return tx;
+	// }else{
+	// 	alert("Create a profile to begin playing!");
+	// }
+	// return undefined;
+}
+
+export async function submitScore(): Promise<Transaction | undefined>{
+	// if(?){
+		let privK = "44de8f8981d9d8b46152a6746889a23425f84a7962fc6b0aaed7500cbaf893a7";
+		let lbId = "0x413794a8701c22b1fac6628285853621ca353c75d6be86eb47cf71844d6cd463";
+		let addy = "8418bb05799666b73c4645aa15e4d1ccae824e1487c01a665f51767826d192b7";
+		let score = 201;
+
+	// console.log(projectCapAddy);
+	// console.log(projectId);
+	// console.log(name);
+	// console.log(unit);
+        let elements: any[] = [];
+		let elements2: any[] = [];
+		const tx = new Transaction();
+		// publicKey.forEach((el) => {
+        //     elements.push(tx.pure.u8(el));
+        // });
+		console.log(ed25519.getPublicKey(privK));
+		const message = `${addy}${score}`;
+		const messageBuffer = Buffer.from(message);
+		// const messageHash = messageBuffer.toString('hex');
+		console.log(messageBuffer);
+		// Sign the message
+		const signature = ed25519.sign(messageBuffer, privK); //wink
+		signature.forEach((el) => {
+            elements.push(tx.pure.u8(el));
+        });
+		console.log(signature);
+		console.log();
+		messageBuffer.forEach((el) => {
+            elements2.push(tx.pure.u8(el));
+        });
+
+		tx.setSender(addy);
+		tx.moveCall({ target: programAddress+"::leaderboard::submit_score", arguments: [
+            tx.sharedObjectRef({
+                objectId: lbId,
+                mutable: true,
+                initialSharedVersion: 529404996
+              }),
+			//   tx.pure.address("0x8418bb05799666b73c4645aa15e4d1ccae824e1487c01a665f51767826d192b7"),
+			  tx.pure.u64(score),
+			//   tx.pure.string(description),
+			// tx.makeMoveVec({type: "u8", elements: elements2}),
+            tx.makeMoveVec({type: "u8", elements: elements})
+			// coinWithBalance({balance: 20000000})
 		]});
 		return tx;
 	// }else{
